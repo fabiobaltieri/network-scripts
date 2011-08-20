@@ -1,0 +1,120 @@
+#!/bin/sh
+
+#
+# Copyright 2007 Fabio Baltieri (fabio.baltieri@gmail.com)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+
+# This script has been developed and used on a GNU/Linux Slackware
+# based system, to use it, just set the correct variables (LAN and WAN
+# interface names), set the correct subnet under the INPUT rules and
+# place the script in /etc/rc.d/rc.firewall so that it will be
+# automatically called by rc.inet2.
+# Also, you probably want to customize the rules for your particular
+# configuration and create some mapping for internal services on the
+# network, a template is present under the "DNAT" section.
+
+IPTABLES=/usr/sbin/iptables
+MODPROBE=/sbin/modprobe
+
+LAN=eth0
+WAN=ppp0
+
+firewall_start()
+{
+  echo "Loading firewall rules"
+
+  $MODPROBE x_tables
+  $MODPROBE ip_tables
+  $MODPROBE iptable_filter
+  $MODPROBE iptable_nat
+  $MODPROBE nf_conntrack
+  $MODPROBE nf_conntrack_ftp ports=21,2121
+  $MODPROBE nf_conntrack_irc
+  $MODPROBE nf_conntrack_pptp
+  $MODPROBE nf_nat_ftp
+  $MODPROBE nf_nat_irc
+  $MODPROBE nf_nat_pptp
+
+  # Enable IP forwarding, rp_filter and syncookies
+  echo 1 > /proc/sys/net/ipv4/ip_forward
+  echo 1 > /proc/sys/net/ipv4/conf/all/rp_filter
+  echo 1 > /proc/sys/net/ipv4/tcp_syncookies
+
+  # Firewall rules
+  $IPTABLES -P INPUT DROP
+  $IPTABLES -A INPUT -i lo -j ACCEPT
+  $IPTABLES -A INPUT -i $LAN -s 192.168.0.0/24 -j ACCEPT
+  $IPTABLES -A INPUT -i $LAN -p udp --dport bootps -j ACCEPT
+  $IPTABLES -A INPUT -i $WAN -p tcp --dport auth -j REJECT --reject-with tcp-reset
+  $IPTABLES -A INPUT -i $WAN -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+  # Forwarding
+  $IPTABLES -A FORWARD -p tcp -m multiport --dport 135,136,137,138,139,445 -j DROP
+  $IPTABLES -A FORWARD -p udp -m multiport --dport 137,138,139,445 -j DROP
+  $IPTABLES -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+
+  # Masquerading
+  $IPTABLES -t nat -A POSTROUTING -o $WAN -j MASQUERADE
+
+  # DNAT
+  #$IPTABLES -t nat -A PREROUTING -i $WAN -p tcp --dport 1234 -j DNAT --to 192.168.0.x
+}
+
+
+firewall_stop()
+{
+  # Disable IP forwarding
+  echo 0 > /proc/sys/net/ipv4/ip_forward
+
+  # Reset default policy to ACCEPT
+  $IPTABLES -t filter -P INPUT ACCEPT
+  $IPTABLES -t filter -P FORWARD ACCEPT
+  $IPTABLES -t filter -P OUTPUT ACCEPT
+  $IPTABLES -t nat -P PREROUTING ACCEPT
+  $IPTABLES -t nat -P POSTROUTING ACCEPT
+  $IPTABLES -t nat -P OUTPUT ACCEPT
+
+  # Flush rules
+  $IPTABLES -F -t filter
+  $IPTABLES -F -t nat
+
+  $IPTABLES -X
+}
+
+
+firewall_status()
+{
+
+  echo
+  echo "Table: filter"
+  echo
+  $IPTABLES -v -t filter -L --line-numbers
+  echo
+  echo "Table: nat"
+  echo
+  $IPTABLES -v -t nat -L --line-numbers
+  echo
+
+}
+
+
+case "$1" in
+'start'|'restart')
+  firewall_stop
+  firewall_start
+  ;;
+'stop')
+  firewall_stop
+  ;;
+'status')
+  firewall_status
+  ;; 
+*)
+  echo "usage $0 start|stop|restart|status"
+esac
+

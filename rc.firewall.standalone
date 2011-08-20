@@ -1,0 +1,81 @@
+#!/bin/sh
+
+#
+# Copyright 2007 Fabio Baltieri (fabio.baltieri@gmail.com)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+
+# rc.firewall: basic state-based firewall script
+
+IPTABLES=/usr/sbin/iptables
+MODPROBE=/sbin/modprobe
+
+LAN=eth0
+WAN=wlan0
+
+firewall_start()
+{
+  echo "Loading firewall rules"
+
+  $MODPROBE ip_tables
+  $MODPROBE iptable_filter
+  $MODPROBE ip_conntrack
+  $MODPROBE ipt_conntrack
+  $MODPROBE ip_conntrack_irc
+  $MODPROBE ip_conntrack_ftp ports=21,2121
+  $MODPROBE ip_conntrack_pptp
+
+  echo 0 > /proc/sys/net/ipv4/ip_forward
+  echo 1 > /proc/sys/net/ipv4/conf/all/rp_filter
+  echo 1 > /proc/sys/net/ipv4/tcp_syncookies
+
+  # input table
+  $IPTABLES -P INPUT DROP
+  $IPTABLES -A INPUT -i lo -j ACCEPT
+  $IPTABLES -A INPUT -i $LAN -j ACCEPT
+  $IPTABLES -A INPUT -i $WAN -p tcp --dport auth -j REJECT --reject-with tcp-reset
+  $IPTABLES -A INPUT -i $WAN -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+  # forward table
+  $IPTABLES -P FORWARD DROP
+
+  # output table
+  $IPTABLES -P OUTPUT ACCEPT
+
+}
+
+firewall_stop()
+{
+  echo 0 > /proc/sys/net/ipv4/ip_forward
+
+  $IPTABLES -F
+  $IPTABLES -P INPUT ACCEPT
+  $IPTABLES -P OUTPUT ACCEPT
+  $IPTABLES -P FORWARD ACCEPT
+}
+
+firewall_status()
+{
+  echo
+  $IPTABLES -v -t filter -L --line-numbers
+  echo
+}
+
+case "$1" in
+'start'|'restart')
+  firewall_stop
+  firewall_start
+  ;;
+'stop')
+  firewall_stop
+  ;;
+'status')
+  firewall_status
+  ;;
+*)
+  echo "usage $0 start|stop|restart|status"
+esac

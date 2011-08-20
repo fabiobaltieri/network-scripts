@@ -1,0 +1,93 @@
+#!/bin/sh
+
+#
+# Copyright 2011 Fabio Baltieri (fabio.baltieri@gmail.com)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+
+# rc.firewall6: simple stateful firewall based on netfilter and
+#              nf_conntrack (ipv6 version).
+
+IP6TABLES=/usr/sbin/ip6tables
+MODPROBE=/sbin/modprobe
+
+LAN0=eth0
+WLAN=wlan+
+TEREDO=teredo
+
+firewall_start()
+{
+  echo "Loading firewall rules"
+
+  $MODPROBE x_tables
+  $MODPROBE ip6_tables
+  $MODPROBE ip6table_filter
+  $MODPROBE nf_conntrack
+  $MODPROBE nf_conntrack_ftp ports=21,2121
+  $MODPROBE nf_conntrack_irc
+  $MODPROBE nf_conntrack_pptp
+  $MODPROBE nf_nat_ftp
+  $MODPROBE nf_nat_irc
+  $MODPROBE nf_nat_pptp
+
+  # Enable IP forwarding, rp_filter and syncookies
+  echo 1 > /proc/sys/net/ipv6/conf/all/forwarding
+
+  # Firewall rules
+  $IP6TABLES -P INPUT DROP
+  $IP6TABLES -A INPUT -i lo -j ACCEPT
+  $IP6TABLES -A INPUT -i $LAN0 -j ACCEPT
+  $IP6TABLES -A INPUT -i $WLAN -j ACCEPT
+  $IP6TABLES -A INPUT -i $TEREDO -p tcp --dport ssh -j ACCEPT
+  $IP6TABLES -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+}
+
+
+firewall_stop()
+{
+  # Disable IP forwarding
+  echo 0 > /proc/sys/net/ipv6/conf/all/forwarding
+
+  # Reset default policy to ACCEPT
+  $IP6TABLES -t filter -P INPUT ACCEPT
+  $IP6TABLES -t filter -P FORWARD ACCEPT
+  $IP6TABLES -t filter -P OUTPUT ACCEPT
+
+  # Flush rules
+  $IP6TABLES -F -t filter
+
+  $IP6TABLES -X
+}
+
+
+firewall_status()
+{
+
+  echo
+  echo "Table: filter"
+  echo
+  $IP6TABLES -v -t filter -L --line-numbers
+  echo
+
+}
+
+
+case "$1" in
+'start'|'restart')
+  firewall_stop
+  firewall_start
+  ;;
+'stop')
+  firewall_stop
+  ;;
+'status')
+  firewall_status
+  ;; 
+*)
+  echo "usage $0 start|stop|restart|status"
+esac
+
