@@ -16,9 +16,9 @@ the Free Software Foundation, either version 3 of the License, or
 Contents
 --------
 
-COPYING      text version of the GPL
-README       this file
-rc.firewall  an example of iptables NAT forwarding firewall
-rc.firewall.standalone an example of iptables standalone firwall
-rc.pppoe     a script to manage a pppoe always-on connection
-rc.firewall6 an example of a ip6tables stateful ipv6 firewall
+    COPYING      text version of the GPL
+    README       this file
+    rc.firewall  an example of iptables NAT forwarding firewall
+    rc.firewall.standalone an example of iptables standalone firwall
+    rc.pppoe     a script to manage a pppoe always-on connection
+    rc.firewall6 an example of a ip6tables stateful ipv6 firewall
