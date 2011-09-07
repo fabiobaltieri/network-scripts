@@ -56,7 +56,7 @@ firewall_start()
   # Forwarding
   $IPTABLES -A FORWARD -p tcp -m multiport --dport 135,136,137,138,139,445 -j DROP
   $IPTABLES -A FORWARD -p udp -m multiport --dport 137,138,139,445 -j DROP
-  $IPTABLES -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+  $IPTABLES -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 
   # Masquerading
   $IPTABLES -t nat -A POSTROUTING -o $WAN -j MASQUERADE
