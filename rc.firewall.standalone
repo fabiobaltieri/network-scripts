@@ -11,8 +11,8 @@
 
 # rc.firewall: basic state-based firewall script
 
-IPTABLES=/usr/sbin/iptables
-MODPROBE=/sbin/modprobe
+IPTABLES=iptables
+MODPROBE=modprobe
 
 LAN=eth0
 WAN=wlan0

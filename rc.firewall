@@ -18,8 +18,8 @@
 # configuration and create some mapping for internal services on the
 # network, a template is present under the "DNAT" section.
 
-IPTABLES=/usr/sbin/iptables
-MODPROBE=/sbin/modprobe
+IPTABLES=iptables
+MODPROBE=modprobe
 
 LAN=eth0
 WAN=ppp0
