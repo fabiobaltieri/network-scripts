@@ -16,11 +16,13 @@ LINKNAME=pppoelink
 NAME=ras
 ETH=eth0
 
-PPPD=/usr/sbin/pppd
-PPPOE=/usr/sbin/pppoe
+PPPD=pppd
+PPPOE=pppoe
 PLUGIN=rp-pppoe.so
+IP=ip
 
-PPPD_OPTIONS="nodetach noauth noproxyarp noaccomp nobsdcomp nodeflate defaultroute persist maxfail 0 lcp-echo-failure 4 lcp-echo-interval 30 mtu 1492 mru 1492"
+# add "nodetach debug" to debug pppd in foreground
+PPPD_OPTIONS="noauth noproxyarp noaccomp nobsdcomp nodeflate defaultroute persist maxfail 0 lcp-echo-failure 4 lcp-echo-interval 30 mtu 1492 mru 1492"
 PPPOE_CMD="$PPPOE -I $ETH -T 180 -m 1412"
 PLUGIN_OPTIONS="plugin $PLUGIN $ETH"
 
@@ -28,6 +30,8 @@ pppoe_start() {
   echo "Connecting PPPoE (link: $LINKNAME, name: $NAME, if: $ETH, mode: $MODE)"
 
   modprobe ppp_generic
+
+  $IP link set $ETH up
   
   case "$MODE" in
   'async')
