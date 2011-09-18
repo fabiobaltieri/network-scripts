@@ -1,0 +1,59 @@
+#!/bin/sh
+#
+# Copyright 2007 Fabio Baltieri (fabio.baltieri@gmail.com)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+
+# rc.pppoe: PPPOE connection helper script
+
+# Mode: async, sync, plugin
+LINKNAME=pppoelink
+NAME=ras
+ETH=eth0
+
+PPPD=pppd
+PPPOE=pppoe
+PLUGIN=rp-pppoe.so
+IP=ip
+
+PPPD_OPTIONS="nodetach noauth noproxyarp noaccomp nobsdcomp nodeflate defaultroute maxfail 0 lcp-echo-failure 4 lcp-echo-interval 30 mtu 1492 mru 1492"
+PPPOE_CMD="$PPPOE -I $ETH -T 180 -m 1412"
+PLUGIN_OPTIONS="plugin $PLUGIN $ETH"
+
+pppoe_start() {
+  echo "Connecting PPPoE (link: $LINKNAME, name: $NAME, if: $ETH)"
+
+  modprobe ppp_generic
+  modprobe pppox
+  modprobe pppoe
+
+  $IP link set $ETH up
+
+  ( while true; do $PPPD $PPPD_OPTIONS name $NAME linkname $LINKNAME $PLUGIN_OPTIONS; sleep 1; done ) < /dev/null > /dev/null 2>&1 &
+}
+
+pppoe_stop() {
+  echo killall -9 pppd rc.pppoe
+  killall -9 pppd rc.pppoe
+}
+
+
+case "$1" in
+'start')
+  pppoe_start
+  ;;
+'stop')
+  pppoe_stop
+  ;;
+'restart')
+  pppoe_stop
+  sleep 3
+  pppoe_start
+  ;;
+*)
+  echo "usage $0 start|stop|restart"
+esac
