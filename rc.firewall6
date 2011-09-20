@@ -16,8 +16,8 @@ IP6TABLES=/usr/sbin/ip6tables
 MODPROBE=/sbin/modprobe
 
 LAN0=eth0
+LAN1=eth1
 WLAN=wlan+
-TEREDO=teredo
 
 firewall_start()
 {
@@ -42,8 +42,15 @@ firewall_start()
   $IP6TABLES -A INPUT -i lo -j ACCEPT
   $IP6TABLES -A INPUT -i $LAN0 -j ACCEPT
   $IP6TABLES -A INPUT -i $WLAN -j ACCEPT
-  $IP6TABLES -A INPUT -i $TEREDO -p tcp --dport ssh -j ACCEPT
+  $IP6TABLES -A INPUT -i $LAN1 -p tcp --dport ssh -j ACCEPT
   $IP6TABLES -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+  # Forwarding
+  $IP6TABLES -P FORWARD DROP
+  $IP6TABLES -A FORWARD -i $LAN0 -o $LAN1 -j ACCEPT
+  $IP6TABLES -A FORWARD -i $LAN1 -o $LAN0 -p tcp --dport ssh -j ACCEPT
+  $IP6TABLES -A FORWARD -i $LAN1 -o $LAN0 -p icmpv6 --icmpv6-type echo-request -j ACCEPT
+  $IP6TABLES -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
 }
 
 
