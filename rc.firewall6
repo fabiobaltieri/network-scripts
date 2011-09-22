@@ -43,6 +43,7 @@ firewall_start()
   $IP6TABLES -A INPUT -i $LAN0 -j ACCEPT
   $IP6TABLES -A INPUT -i $WLAN -j ACCEPT
   $IP6TABLES -A INPUT -i $LAN1 -p tcp --dport ssh -j ACCEPT
+  $IP6TABLES -A INPUT -i $LAN1 -p icmpv6 -j ACCEPT
   $IP6TABLES -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 
   # Forwarding
