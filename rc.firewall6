@@ -12,11 +12,11 @@
 # rc.firewall6: simple stateful firewall based on netfilter and
 #              nf_conntrack (ipv6 version).
 
-IP6TABLES=/usr/sbin/ip6tables
-MODPROBE=/sbin/modprobe
+IP6TABLES=ip6tables
+MODPROBE=modprobe
 
-LAN0=eth0
-LAN1=eth1
+LAN=eth0
+WAN=tb0
 WLAN=wlan+
 
 firewall_start()
@@ -40,17 +40,17 @@ firewall_start()
   # Firewall rules
   $IP6TABLES -P INPUT DROP
   $IP6TABLES -A INPUT -i lo -j ACCEPT
-  $IP6TABLES -A INPUT -i $LAN0 -j ACCEPT
+  $IP6TABLES -A INPUT -i $LAN -j ACCEPT
   $IP6TABLES -A INPUT -i $WLAN -j ACCEPT
-  $IP6TABLES -A INPUT -i $LAN1 -p tcp --dport ssh -j ACCEPT
-  $IP6TABLES -A INPUT -i $LAN1 -p icmpv6 -j ACCEPT
+  $IP6TABLES -A INPUT -i $WAN -p tcp --dport ssh -j ACCEPT
+  $IP6TABLES -A INPUT -i $WAN -p icmpv6 -j ACCEPT
   $IP6TABLES -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 
   # Forwarding
   $IP6TABLES -P FORWARD DROP
-  $IP6TABLES -A FORWARD -i $LAN0 -o $LAN1 -j ACCEPT
-  $IP6TABLES -A FORWARD -i $LAN1 -o $LAN0 -p tcp --dport ssh -j ACCEPT
-  $IP6TABLES -A FORWARD -i $LAN1 -o $LAN0 -p icmpv6 --icmpv6-type echo-request -j ACCEPT
+  $IP6TABLES -A FORWARD -i $LAN -o $WAN -j ACCEPT
+  $IP6TABLES -A FORWARD -i $WAN -o $LAN -p tcp --dport ssh -j ACCEPT
+  $IP6TABLES -A FORWARD -i $WAN -o $LAN -p icmpv6 --icmpv6-type echo-request -j ACCEPT
   $IP6TABLES -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
 }
 
