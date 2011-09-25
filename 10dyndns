@@ -1,0 +1,8 @@
+#!/bin/sh
+
+USERNAME="user"
+PASSWORD="password"
+HOST="hostname.homelinux.net"
+
+/usr/bin/wget -q -O- "http://$USERNAME:$PASSWORD@members.dyndns.org/nic/update?system=dyndns&hostname=$HOST" | logger -t dyndns
+
