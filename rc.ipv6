@@ -1,0 +1,75 @@
+#!/bin/sh
+
+#
+# Copyright 2011 Fabio Baltieri (fabio.baltieri@gmail.com)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+
+# rc.tb: tunnel broker setup script
+
+IP=ip
+
+LAN=eth0
+WAN=tb0
+
+# Tunnel parameters
+REMOTE_IPV4="216.66.84.46"
+LOCAL_IPV6="2001:470:1234:5678::2/64"
+REMOTE_IPV6="2001:470:1234:5678::1"
+
+tb_start()
+{
+  echo "Configuring Tunnel Broker device: $WAN"
+
+  ip tunnel add $WAN mode sit remote $REMOTE_IPV4
+  ip link set $WAN up
+  ip addr add $LOCAL_IPV6 dev $LAN
+  ip route add $REMOTE_IPV6 dev $WAN
+  ip route add ::/0 dev $WAN
+}
+
+
+tb_stop()
+{
+  echo "Stopping Tunnel Broker device: $WAN"
+
+  ip route del ::/0 dev $WAN
+  ip route del $REMOTE_IPV6 dev $WAN
+  ip addr del $LOCAL_IPV6 dev $LAN
+  ip link set $WAN down
+  ip tunnel del $WAN
+}
+
+
+tb_status()
+{
+  echo "IPv6 Addreses"
+  ip -6 addr
+  echo ""
+  echo "IPv6 Routing Table"
+  ip -6 route
+}
+
+
+case "$1" in
+'restart')
+  tb_stop
+  tb_start
+  ;;
+'start')
+  tb_start
+  ;;
+'stop')
+  tb_stop
+  ;;
+'status')
+  tb_status
+  ;; 
+*)
+  echo "usage $0 start|stop|restart|status"
+esac
+
