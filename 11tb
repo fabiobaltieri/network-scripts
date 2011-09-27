@@ -1,8 +1,16 @@
 #!/bin/sh
+TAG="tb"
+
 IPV4ADDR=AUTO
 PASS="very_secret"
 MD5PASS=$( echo -n $PASS | md5sum | cut -d' ' -f1 )
 USERID=tb11111111111111.11111111
 TUNNELID=123456
 
-wget -q -O- "http://ipv4.tunnelbroker.net/ipv4_end.php?ip=$IPV4ADDR&pass=$MD5PASS&apikey=$USERID&tid=$TUNNELID" | logger
+wget -q -O- "http://ipv4.tunnelbroker.net/ipv4_end.php?ip=$IPV4ADDR&pass=$MD5PASS&apikey=$USERID&tid=$TUNNELID" | logger -t "$TAG"
+
+DOMAIN="example.com"
+KEY="k3y"
+
+wget -q -4 -O- "http://$DOMAIN:$KEY@dyn.dns.he.net/nic/update?hostname=$DOMAIN" | logger -t "$TAG"
+wget -q -6 -O- "http://$DOMAIN:$KEY@dyn.dns.he.net/nic/update?hostname=$DOMAIN" | logger -t "$TAG"
