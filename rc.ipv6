@@ -14,34 +14,39 @@
 IP=ip
 
 LAN=eth0
-WAN=tb0
+TB=tb0
 
 # Tunnel parameters
 REMOTE_IPV4="216.66.84.46"
 LOCAL_IPV6="2001:470:1234:5678::2/64"
 REMOTE_IPV6="2001:470:1234:5678::1"
+ROUTED_IPV6="2001:470:1235:5678::1/64"
 
 tb_start()
 {
-  echo "Configuring Tunnel Broker device: $WAN"
+  echo "Configuring Tunnel Broker device: $TB"
 
-  ip tunnel add $WAN mode sit remote $REMOTE_IPV4
-  ip link set $WAN up
-  ip addr add $LOCAL_IPV6 dev $LAN
-  ip route add $REMOTE_IPV6 dev $WAN
-  ip route add ::/0 dev $WAN
+  ip tunnel add $TB mode sit remote $REMOTE_IPV4
+  ip link set $TB up
+  ip addr add $LOCAL_IPV6 dev $TB
+  ip route add $REMOTE_IPV6 dev $TB
+  ip route add ::/0 dev $TB
+
+  ip addr add $ROUTED_IPV6 dev $LAN
 }
 
 
 tb_stop()
 {
-  echo "Stopping Tunnel Broker device: $WAN"
+  echo "Stopping Tunnel Broker device: $TB"
 
-  ip route del ::/0 dev $WAN
-  ip route del $REMOTE_IPV6 dev $WAN
-  ip addr del $LOCAL_IPV6 dev $LAN
-  ip link set $WAN down
-  ip tunnel del $WAN
+  ip addr del $ROUTED_IPV6 dev $LAN
+
+  ip route del ::/0 dev $TB
+  ip route del $REMOTE_IPV6 dev $TB
+  ip addr del $LOCAL_IPV6 dev $TB
+  ip link set $TB down
+  ip tunnel del $TB
 }
 
 
