@@ -21,4 +21,7 @@ Contents
     rc.firewall  an example of iptables NAT forwarding firewall
     rc.firewall.standalone an example of iptables standalone firwall
     rc.pppoe     a script to manage a pppoe always-on connection
+    rc.pppoe.x86 a script to manage a pppoe always-on connection (x86 version)
     rc.firewall6 an example of a ip6tables stateful ipv6 firewall
+    rc.ipv6      a simple script to manage ipv6 tunnel brokers
+    11tb         a script to update tunnel broker information from pppd
