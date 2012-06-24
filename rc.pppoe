@@ -20,7 +20,7 @@ PPPOE=pppoe
 PLUGIN=rp-pppoe.so
 IP=ip
 
-PPPD_OPTIONS="nodetach noauth noproxyarp noaccomp nobsdcomp nodeflate defaultroute maxfail 0 lcp-echo-failure 4 lcp-echo-interval 30 mtu 1492 mru 1492"
+PPPD_OPTIONS="nodetach noauth noproxyarp noaccomp nobsdcomp nodeflate defaultroute maxfail 0 lcp-echo-failure 4 lcp-echo-interval 30 mtu 1492 mru 1492 +ipv6 ipv6cp-use-persistent"
 PPPOE_CMD="$PPPOE -I $ETH -T 180 -m 1412"
 PLUGIN_OPTIONS="plugin $PLUGIN $ETH"
 
